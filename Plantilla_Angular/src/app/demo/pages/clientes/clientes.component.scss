@@ -1,0 +1,19 @@
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  
+  &:hover {
+    background-color: #f8f9fa;
+  }
+  
+  i {
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+  }
+}
+
+tr {
+  &:hover {
+    background-color: #f8f9fa;
+  }
+}

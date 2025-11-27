@@ -1,0 +1,51 @@
+# Dependencias
+node_modules/
+package-lock.json
+yarn.lock
+
+# Compilados y caché
+.angular/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment
+.env
+.env.local
+.env.*.local
+appsettings.Development.json
+
+# Temporales
+*.tmp
+*.temp

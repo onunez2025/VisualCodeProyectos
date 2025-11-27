@@ -1,0 +1,855 @@
+<div class="row">
+  <div class="col-sm-12">
+    <app-card cardTitle="Clientes" [options]="false">
+      <div class="card-body">
+        <!-- Filtros -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label for="filtroNombre" class="form-label">Nombre Apellido</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="filtroNombre"
+              [(ngModel)]="filtroNombre"
+              placeholder="Buscar por nombre o apellido"
+              (keyup.enter)="buscar()">
+          </div>
+          <div class="col-md-3">
+            <label for="filtroNumeroDocumento" class="form-label">Numero_documento</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="filtroNumeroDocumento"
+              [(ngModel)]="filtroNumeroDocumento"
+              placeholder="Buscar por número de documento"
+              (keyup.enter)="buscar()">
+          </div>
+          <div class="col-md-2">
+            <label for="filtroDepartamento" class="form-label">Departamento</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="filtroDepartamento"
+              [(ngModel)]="filtroDepartamento"
+              placeholder="Departamento"
+              (keyup.enter)="buscar()">
+          </div>
+          <div class="col-md-2">
+            <label for="filtroDistrito" class="form-label">Distrito</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="filtroDistrito"
+              [(ngModel)]="filtroDistrito"
+              placeholder="Distrito"
+              (keyup.enter)="buscar()">
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary me-2" (click)="buscar()">
+              <i class="feather icon-search"></i> Buscar
+            </button>
+            <button class="btn btn-secondary" (click)="limpiarFiltros()">
+              <i class="feather icon-x"></i> Limpiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div *ngIf="isLoading" class="text-center my-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Tabla de Clientes -->
+        <div *ngIf="!isLoading && !errorMessage" class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th (click)="sortBy('id')" class="sortable">
+                  ID <i [class]="getSortIcon('id')"></i>
+                </th>
+                <th (click)="sortBy('nombreCompleto')" class="sortable">
+                  Nombre Completo <i [class]="getSortIcon('nombreCompleto')"></i>
+                </th>
+                <th (click)="sortBy('tipoDocumento')" class="sortable">
+                  Tipo Doc. <i [class]="getSortIcon('tipoDocumento')"></i>
+                </th>
+                <th (click)="sortBy('numeroDocumento')" class="sortable">
+                  Nro. Documento <i [class]="getSortIcon('numeroDocumento')"></i>
+                </th>
+                <th (click)="sortBy('celular')" class="sortable">
+                  Celular <i [class]="getSortIcon('celular')"></i>
+                </th>
+                <th (click)="sortBy('correoElectronico')" class="sortable">
+                  Correo <i [class]="getSortIcon('correoElectronico')"></i>
+                </th>
+                <th (click)="sortBy('departamento')" class="sortable">
+                  Departamento <i [class]="getSortIcon('departamento')"></i>
+                </th>
+                <th (click)="sortBy('distrito')" class="sortable">
+                  Distrito <i [class]="getSortIcon('distrito')"></i>
+                </th>
+                <th (click)="sortBy('creadoEl')" class="sortable">
+                  Fecha Creación <i [class]="getSortIcon('creadoEl')"></i>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cliente of clientes" (click)="openDetailModal(clienteDetailModal, cliente)" style="cursor: pointer;">
+                <td>{{ cliente.id }}</td>
+                <td>{{ cliente.nombre }} {{ cliente.apellido }}</td>
+                <td>{{ cliente.tipoDocumento }}</td>
+                <td>{{ cliente.numeroDocumento }}</td>
+                <td>{{ cliente.celular }}</td>
+                <td>{{ cliente.correoElectronico }}</td>
+                <td>{{ cliente.departamento }}</td>
+                <td>{{ cliente.distrito }}</td>
+                <td>{{ cliente.creadoEl | date: 'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        <div *ngIf="!isLoading && !errorMessage" class="row mt-3">
+          <div class="col-md-6">
+            <p class="text-muted">
+              Mostrando {{ (currentPage - 1) * pageSize + 1 }} a {{ Math.min(currentPage * pageSize, totalRecords) }} de {{ totalRecords }} registros
+            </p>
+          </div>
+          <div class="col-md-6">
+            <nav>
+              <ul class="pagination justify-content-end">
+                <li class="page-item" [class.disabled]="currentPage === 1">
+                  <a class="page-link" (click)="previousPage()" style="cursor: pointer;">Anterior</a>
+                </li>
+                <li *ngFor="let page of getPageNumbers()" 
+                    class="page-item" 
+                    [class.active]="page === currentPage">
+                  <a class="page-link" (click)="goToPage(page)" style="cursor: pointer;">{{ page }}</a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === totalPages">
+                  <a class="page-link" (click)="nextPage()" style="cursor: pointer;">Siguiente</a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </app-card>
+  </div>
+</div>
+
+<!-- Modal de Detalle del Cliente -->
+<ng-template #clienteDetailModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Detalle del Cliente</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab === 'datos'"
+          (click)="selectTab('datos')"
+          type="button">
+          Datos Generales
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab === 'productos'"
+          (click)="selectTab('productos')"
+          type="button">
+          Productos Registrados ({{ clienteProductos.length }})
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab === 'tickets'"
+          (click)="selectTab('tickets')"
+          type="button">
+          Tickets ({{ clienteTickets.length }})
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Datos Generales Tab -->
+      <div *ngIf="activeTab === 'datos' && selectedCliente" class="tab-pane fade show active">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <strong>ID:</strong>
+            <p>{{ selectedCliente.id }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Nombre:</strong>
+            <p>{{ selectedCliente.nombre }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Apellido:</strong>
+            <p>{{ selectedCliente.apellido }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Tipo de Documento:</strong>
+            <p>{{ selectedCliente.tipoDocumento }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Número de Documento:</strong>
+            <p>{{ selectedCliente.numeroDocumento }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Celular:</strong>
+            <p>{{ selectedCliente.celular }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Celular 2:</strong>
+            <p>{{ selectedCliente.celular2 || 'N/A' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Teléfono Fijo:</strong>
+            <p>{{ selectedCliente.telefonoFijo || 'N/A' }}</p>
+          </div>
+          <div class="col-md-12 mb-3">
+            <strong>Correo Electrónico:</strong>
+            <p>{{ selectedCliente.correoElectronico }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>País/Región:</strong>
+            <p>{{ selectedCliente.paisRegion }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Departamento:</strong>
+            <p>{{ selectedCliente.departamento }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Provincia:</strong>
+            <p>{{ selectedCliente.provincia }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Distrito:</strong>
+            <p>{{ selectedCliente.distrito }}</p>
+          </div>
+          <div class="col-md-12 mb-3">
+            <strong>Nombre Vía:</strong>
+            <p>{{ selectedCliente.nombreVia }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Número:</strong>
+            <p>{{ selectedCliente.numero }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Zona:</strong>
+            <p>{{ selectedCliente.zona }}</p>
+          </div>
+          <div class="col-md-12 mb-3">
+            <strong>Nombre Zona:</strong>
+            <p>{{ selectedCliente.nombreZona }}</p>
+          </div>
+          <div class="col-md-12 mb-3">
+            <strong>Referencia:</strong>
+            <p>{{ selectedCliente.referencia }}</p>
+          </div>
+          <div class="col-md-12 mb-3">
+            <strong>Referencia Adicional:</strong>
+            <p>{{ selectedCliente.referenciaAdicional || 'N/A' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Nro. Interior/Dpto:</strong>
+            <p>{{ selectedCliente.nroIntDpto || 'N/A' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Nacionalidad:</strong>
+            <p>{{ selectedCliente.nacionalidad }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Moroso:</strong>
+            <p>{{ selectedCliente.moroso || 'N/A' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Creado El:</strong>
+            <p>{{ selectedCliente.creadoEl | date: 'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Creado Por:</strong>
+            <p>{{ selectedCliente.creadoPor }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Modificado El:</strong>
+            <p>{{ selectedCliente.modificadoEl ? (selectedCliente.modificadoEl | date: 'dd/MM/yyyy HH:mm') : 'N/A' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Modificado Por:</strong>
+            <p>{{ selectedCliente.modificadoPor || 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tickets Tab -->
+      <div *ngIf="activeTab === 'tickets'" class="tab-pane fade show active">
+        <div *ngIf="loadingTickets" class="text-center my-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando tickets...</span>
+          </div>
+        </div>
+
+        <div *ngIf="!loadingTickets && clienteTickets.length === 0" class="alert alert-info">
+          No se encontraron tickets para este cliente.
+        </div>
+
+        <div *ngIf="!loadingTickets && clienteTickets.length > 0" class="table-responsive">
+          <table class="table table-hover table-sm">
+            <thead>
+              <tr>
+                <th>ID Ticket</th>
+                <th>Estado</th>
+                <th>Productos</th>
+                <th>Fecha Visita</th>
+                <th>Tipo Servicio</th>
+                <th>Técnico</th>
+                <th>Distrito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ticket of clienteTickets" style="cursor: pointer;" (click)="openTicketDetail(ticketDetailModal, ticket)">
+                <td>{{ ticket.id }}</td>
+                <td>
+                  <span [class]="'badge ' + getEstadoBadgeClass(ticket.estado)">
+                    {{ ticket.estado }}
+                  </span>
+                </td>
+                <td>{{ ticket.materialLabel || ticket.productosRegistrados || '-' }}</td>
+                <td>{{ ticket.fechaVisita | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ ticket.tipoServicio }}</td>
+                <td>{{ ticket.tecnicoLabel || ticket.tecnico || '-' }}</td>
+                <td>{{ ticket.distrito }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Productos Registrados Tab -->
+      <div *ngIf="activeTab === 'productos'" class="tab-pane fade show active">
+        <div *ngIf="loadingProductos" class="text-center my-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando productos...</span>
+          </div>
+        </div>
+
+        <div *ngIf="!loadingProductos && clienteProductos.length === 0" class="alert alert-info">
+          No se encontraron productos registrados para este cliente.
+        </div>
+
+        <div *ngIf="!loadingProductos && clienteProductos.length > 0" class="table-responsive">
+          <table class="table table-hover table-sm">
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Categoría</th>
+                <th>Lugar de Compra</th>
+                <th>Ubicación</th>
+                <th>Garantía</th>
+                <th>Fecha Registro</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let producto of clienteProductos" style="cursor: pointer;" (click)="openProductoDetail(productoDetailModal, producto)">
+                <td>
+                  <strong>{{ producto.materialLabel || producto.producto }}</strong>
+                  <br>
+                  <small class="text-muted" *ngIf="producto.materialCategoria">{{ producto.materialCategoria }}</small>
+                </td>
+                <td>{{ producto.categoriaProductoRegistrado || '-' }}</td>
+                <td>{{ producto.lugarCompra || '-' }}</td>
+                <td>
+                  <small>
+                    {{ producto.distrito || '-' }}
+                    <span *ngIf="producto.nombreVia || producto.numero">
+                      <br>{{ producto.nombreVia }} {{ producto.numero }}
+                    </span>
+                  </small>
+                </td>
+                <td>{{ producto.garantia || '-' }}</td>
+                <td>{{ producto.creadoEl | date: 'dd/MM/yyyy' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cerrar</button>
+  </div>
+</ng-template>
+
+<!-- Modal de Detalle de Ticket -->
+<ng-template #ticketDetailModal let-modal>
+  <div class="modal-header bg-primary text-white">
+    <h5 class="modal-title">
+      <i class="feather icon-clipboard me-2"></i>
+      Detalle del Ticket: {{ selectedTicket?.id }}
+    </h5>
+    <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  
+  <div class="modal-body" *ngIf="selectedTicket">
+    <!-- Información del Cliente -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-user me-2"></i>Información del Cliente</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Cliente</label>
+            <div class="fw-bold">{{ selectedTicket.clienteLabel || selectedTicket.clienteNombreCompleto || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Empresa</label>
+            <div class="fw-bold">{{ selectedTicket.empresaLabel || selectedTicket.empresa || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Celular</label>
+            <div>{{ selectedTicket.clienteCelular || selectedTicket.celular || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Celular 2</label>
+            <div>{{ selectedTicket.clienteCelular2 || selectedTicket.celular2 || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Teléfono Fijo</label>
+            <div>{{ selectedTicket.clienteTelefonoFijo || selectedTicket.telefonoFijo || '-' }}</div>
+          </div>
+          <div class="col-md-12 mb-3">
+            <label class="text-muted small">Correo</label>
+            <div>{{ selectedTicket.clienteCorreo || selectedTicket.correoPromotorVenta || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado y Tipo de Servicio -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-info me-2"></i>Estado del Ticket</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Estado</label>
+            <div>
+              <span [class]="'badge ' + getEstadoBadgeClass(selectedTicket.estado)">
+                {{ selectedTicket.estado || 'Sin estado' }}
+              </span>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Tipo de Servicio</label>
+            <div>{{ selectedTicket.tipoServicio || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Motivo Incidente</label>
+            <div>{{ selectedTicket.motivoIncidente || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fechas -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-calendar me-2"></i>Fechas</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Fecha de Visita</label>
+            <div class="fw-bold">{{ selectedTicket.fechaVisita | date: 'dd/MM/yyyy' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Inicio Solicitado</label>
+            <div>{{ selectedTicket.inicioSolicitado | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Fin Solicitado</label>
+            <div>{{ selectedTicket.finSolicitado | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Check-in</label>
+            <div>{{ selectedTicket.checkIn | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Creado el</label>
+            <div>{{ selectedTicket.creadoEl | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Modificado el</label>
+            <div>{{ selectedTicket.modificadoEl | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ubicación -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-map-pin me-2"></i>Ubicación</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">País/Región</label>
+            <div>{{ selectedTicket.paisRegion || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Departamento</label>
+            <div>{{ selectedTicket.departamento || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Provincia</label>
+            <div>{{ selectedTicket.provincia || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Distrito</label>
+            <div class="fw-bold">{{ selectedTicket.distrito || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Zona</label>
+            <div>{{ selectedTicket.zona || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Nombre Zona</label>
+            <div>{{ selectedTicket.nombreZona || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Nombre Vía</label>
+            <div>{{ selectedTicket.nombreVia || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Número</label>
+            <div>{{ selectedTicket.numero || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Referencia</label>
+            <div>{{ selectedTicket.referencia || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Check-in Localización</label>
+            <div>{{ selectedTicket.checkInLocalizacion || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Asignado -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-users me-2"></i>Personal Asignado</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Técnico</label>
+            <div class="fw-bold">{{ selectedTicket.tecnicoLabel || selectedTicket.tecnico || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">Ayudante</label>
+            <div>{{ selectedTicket.ayudante || '-' }}</div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-muted small">IT</label>
+            <div>{{ selectedTicket.it || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Productos y Descripción -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-package me-2"></i>Productos y Descripción</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="text-muted small">Productos Registrados</label>
+          <div class="fw-bold">{{ selectedTicket.materialLabel || selectedTicket.productosRegistrados || '-' }}</div>
+        </div>
+        <div class="mb-3">
+          <label class="text-muted small">Descripción</label>
+          <div class="border rounded p-3 bg-light">
+            {{ selectedTicket.descripcion || 'Sin descripción' }}
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="text-muted small">Notas Internas</label>
+          <div class="border rounded p-3 bg-light">
+            {{ selectedTicket.notasInternas || 'Sin notas' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auditoría -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-activity me-2"></i>Auditoría</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Creado por</label>
+            <div>{{ selectedTicket.creadoPor || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Modificado por</label>
+            <div>{{ selectedTicket.modificadoPor || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button 
+      type="button" 
+      class="btn btn-primary" 
+      *ngIf="informeTecnico && !loadingInforme"
+      (click)="openInformeModal(informeModal)">
+      <i class="feather icon-file-text me-1"></i>Ver Informe Técnico
+    </button>
+    <span class="text-muted me-auto" *ngIf="loadingInforme">
+      <span class="spinner-border spinner-border-sm me-1"></span>
+      Verificando informe...
+    </span>
+    <span class="text-muted me-auto" *ngIf="informeError && !loadingInforme">
+      <i class="feather icon-info me-1"></i>{{ informeError }}
+    </span>
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+      <i class="feather icon-x me-1"></i>Cerrar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal de Informe Técnico -->
+<ng-template #informeModal let-modal>
+  <div class="modal-header bg-success text-white">
+    <h5 class="modal-title">
+      <i class="feather icon-file-text me-2"></i>
+      Informe Técnico
+    </h5>
+    <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  
+  <div class="modal-body" *ngIf="informeTecnico">
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-info me-2"></i>Información General</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">ID Informe</label>
+            <div class="fw-bold">{{ informeTecnico.idInformeTecnico }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Ticket</label>
+            <div class="fw-bold">{{ informeTecnico.ticket }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Serie Producto</label>
+            <div>{{ informeTecnico.serieProducto || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Estado</label>
+            <div>{{ informeTecnico.estado || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-tool me-2"></i>Visita y Trabajo</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="text-muted small">Visita Realizada</label>
+          <div class="border rounded p-3 bg-light">{{ informeTecnico.visitaRealizada || 'Sin información' }}</div>
+        </div>
+        <div class="mb-3">
+          <label class="text-muted small">Trabajo Efectuado</label>
+          <div class="border rounded p-3 bg-light">{{ informeTecnico.trabajoEfectuado || 'Sin descripción' }}</div>
+        </div>
+        <div class="mb-3">
+          <label class="text-muted small">Observaciones del Técnico</label>
+          <div class="border rounded p-3 bg-light" style="white-space: pre-wrap;">{{ informeTecnico.observacionesTecnico || 'Sin observaciones' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-edit me-2"></i>Firmas</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Firma Técnico</label>
+            <div *ngIf="informeTecnico.firmaTecnico">
+              <img [src]="informeTecnico.firmaTecnico" alt="Firma Técnico" class="img-fluid border rounded" style="max-height: 150px;">
+            </div>
+            <div *ngIf="!informeTecnico.firmaTecnico" class="text-muted">Sin firma</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Firma Cliente</label>
+            <div *ngIf="informeTecnico.firmaCliente">
+              <img [src]="informeTecnico.firmaCliente" alt="Firma Cliente" class="img-fluid border rounded" style="max-height: 150px;">
+            </div>
+            <div *ngIf="!informeTecnico.firmaCliente" class="text-muted">Sin firma</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="feather icon-activity me-2"></i>Auditoría</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Creado el</label>
+            <div>{{ informeTecnico.creadoEl | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Creado por</label>
+            <div>{{ informeTecnico.creadoPor || '-' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Modificado el</label>
+            <div>{{ informeTecnico.modificadoEl | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-muted small">Modificado por</label>
+            <div>{{ informeTecnico.modificadoPor || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+      <i class="feather icon-x me-1"></i>Cerrar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal de Detalle de Producto Registrado -->
+<ng-template #productoDetailModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Detalle del Producto Registrado</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div *ngIf="selectedProducto" class="row">
+      <div class="col-md-12 mb-3">
+        <label class="form-label text-muted">Material</label>
+        <p class="fw-bold">{{ selectedProducto.materialLabel || selectedProducto.producto }}</p>
+        <small class="text-muted" *ngIf="selectedProducto.materialCategoria">
+          Categoría: {{ selectedProducto.materialCategoria }}
+        </small>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">ID Producto</label>
+        <p>{{ selectedProducto.id }}</p>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Categoría Producto Registrado</label>
+        <p>{{ selectedProducto.categoriaProductoRegistrado || '-' }}</p>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Lugar de Compra</label>
+        <p>{{ selectedProducto.lugarCompra || '-' }}</p>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Garantía</label>
+        <p>{{ selectedProducto.garantia || '-' }}</p>
+      </div>
+      <div class="col-md-12 mb-3">
+        <h6 class="text-primary">Ubicación</h6>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Departamento</label>
+        <p>{{ selectedProducto.departamento || '-' }}</p>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Provincia</label>
+        <p>{{ selectedProducto.provincia || '-' }}</p>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Distrito</label>
+        <p>{{ selectedProducto.distrito || '-' }}</p>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Zona</label>
+        <p>{{ selectedProducto.nombreZona || selectedProducto.zona || '-' }}</p>
+      </div>
+      <div class="col-md-12 mb-3">
+        <label class="form-label text-muted">Dirección</label>
+        <p>{{ selectedProducto.nombreVia }} {{ selectedProducto.numero }}</p>
+      </div>
+      <div class="col-md-12 mb-3" *ngIf="selectedProducto.edificioPlantaSala">
+        <label class="form-label text-muted">Edificio/Planta/Sala</label>
+        <p>{{ selectedProducto.edificioPlantaSala }}</p>
+      </div>
+      <div class="col-md-12 mb-3" *ngIf="selectedProducto.referencia">
+        <label class="form-label text-muted">Referencia</label>
+        <p>{{ selectedProducto.referencia }}</p>
+      </div>
+      <div class="col-md-6 mb-3" *ngIf="selectedProducto.latitud">
+        <label class="form-label text-muted">Latitud</label>
+        <p>{{ selectedProducto.latitud }}</p>
+      </div>
+      <div class="col-md-6 mb-3" *ngIf="selectedProducto.longitud">
+        <label class="form-label text-muted">Longitud</label>
+        <p>{{ selectedProducto.longitud }}</p>
+      </div>
+      <div class="col-md-12 mb-3">
+        <h6 class="text-primary">Información de Auditoría</h6>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Fecha de Creación</label>
+        <p>{{ selectedProducto.creadoEl | date: 'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label text-muted">Creado Por</label>
+        <p>{{ selectedProducto.creadoPor }}</p>
+      </div>
+      <div class="col-md-6 mb-3" *ngIf="selectedProducto.modificadoEl">
+        <label class="form-label text-muted">Fecha de Modificación</label>
+        <p>{{ selectedProducto.modificadoEl | date: 'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+      <div class="col-md-6 mb-3" *ngIf="selectedProducto.modificadoPor">
+        <label class="form-label text-muted">Modificado Por</label>
+        <p>{{ selectedProducto.modificadoPor }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cerrar</button>
+  </div>
+</ng-template>

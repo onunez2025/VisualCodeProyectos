@@ -1,0 +1,277 @@
+<div class="row" *ngIf="loading">
+  <div class="col-12 text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3">Cargando estadísticas del servicio técnico...</p>
+  </div>
+</div>
+
+<div class="row" *ngIf="!loading && stats">
+  <!-- KPIs Principales -->
+  <div class="col-xl-3 col-md-6">
+    <app-card [hidHeader]="true">
+      <h6 class="mb-4">Total de Tickets</h6>
+      <div class="row d-flex align-items-center">
+        <div class="col-9">
+          <h3 class="f-w-300 d-flex align-items-center m-b-0">
+            <i class="feather icon-file-text text-c-blue f-30 m-r-10"></i>
+            {{ stats.totalTickets | number }}
+          </h3>
+        </div>
+        <div class="col-3 text-end">
+          <p class="m-b-0">100%</p>
+        </div>
+      </div>
+      <div class="m-t-30">
+        <ngb-progressbar type="progress-bar progress-c-theme" height="7px" [value]="100"></ngb-progressbar>
+      </div>
+    </app-card>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <app-card [hidHeader]="true">
+      <h6 class="mb-4">Tickets del Mes</h6>
+      <div class="row d-flex align-items-center">
+        <div class="col-9">
+          <h3 class="f-w-300 d-flex align-items-center m-b-0">
+            <i class="feather icon-calendar text-c-green f-30 m-r-10"></i>
+            {{ stats.ticketsDelMes | number }}
+          </h3>
+        </div>
+        <div class="col-3 text-end">
+          <p class="m-b-0">{{ ((stats.ticketsDelMes / stats.totalTickets) * 100).toFixed(1) }}%</p>
+        </div>
+      </div>
+      <div class="m-t-30">
+        <ngb-progressbar type="progress-bar progress-c-theme" height="7px" [value]="(stats.ticketsDelMes / stats.totalTickets) * 100"></ngb-progressbar>
+      </div>
+    </app-card>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <app-card [hidHeader]="true">
+      <h6 class="mb-4">Tickets Cerrados</h6>
+      <div class="row d-flex align-items-center">
+        <div class="col-9">
+          <h3 class="f-w-300 d-flex align-items-center m-b-0">
+            <i class="feather icon-check-circle text-c-green f-30 m-r-10"></i>
+            {{ stats.ticketsCerrados | number }}
+          </h3>
+        </div>
+        <div class="col-3 text-end">
+          <p class="m-b-0">{{ ((stats.ticketsCerrados / stats.totalTickets) * 100).toFixed(1) }}%</p>
+        </div>
+      </div>
+      <div class="m-t-30">
+        <ngb-progressbar type="progress-bar progress-c-theme" height="7px" [value]="(stats.ticketsCerrados / stats.totalTickets) * 100"></ngb-progressbar>
+      </div>
+    </app-card>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <app-card [hidHeader]="true">
+      <h6 class="mb-4">Tiempo Promedio</h6>
+      <div class="row d-flex align-items-center">
+        <div class="col-9">
+          <h3 class="f-w-300 d-flex align-items-center m-b-0">
+            <i class="feather icon-clock text-c-yellow f-30 m-r-10"></i>
+            {{ stats.promedioTiempoResolucion | number:'1.1-1' }}h
+          </h3>
+        </div>
+        <div class="col-3 text-end">
+          <p class="m-b-0 small">Resolución</p>
+        </div>
+      </div>
+      <div class="m-t-30">
+        <ngb-progressbar type="progress-bar progress-c-theme2" height="7px" [value]="70"></ngb-progressbar>
+      </div>
+    </app-card>
+  </div>
+
+  <!-- Gráfico de Tendencia Semanal -->
+  <div class="col-xl-8 col-md-12">
+    <app-card cardTitle="Tendencia Semanal de Tickets">
+      <div id="tendencia-chart" style="height: 350px"></div>
+    </app-card>
+  </div>
+
+  <!-- Estados de Tickets -->
+  <div class="col-xl-4 col-md-6">
+    <app-card cardTitle="Estados de Tickets" cardClass="table-card" blockClass="p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Estado</th>
+              <th class="text-end">Cantidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let estado of stats.ticketsPorEstado.slice(0, 8)">
+              <td>
+                <i class="feather {{ getEstadoIcon(estado.estado) }} {{ getEstadoColor(estado.estado) }} m-r-10"></i>
+                {{ estado.estado }}
+              </td>
+              <td class="text-end">
+                <span class="badge bg-light-primary">{{ estado.cantidad }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </app-card>
+  </div>
+
+  <!-- Gráfico de Tipo de Servicio -->
+  <div class="col-xl-6 col-md-6">
+    <app-card cardTitle="Distribución por Tipo de Servicio">
+      <div id="tipo-servicio-chart" style="height: 350px"></div>
+    </app-card>
+  </div>
+
+  <!-- Gráfico de Estados -->
+  <div class="col-xl-6 col-md-6">
+    <app-card cardTitle="Top Estados de Tickets">
+      <div id="estado-chart" style="height: 350px"></div>
+    </app-card>
+  </div>
+
+  <!-- Gráfico de Departamentos -->
+  <div class="col-xl-8 col-md-12">
+    <app-card cardTitle="Tickets por Departamento">
+      <div id="departamento-chart" style="height: 400px"></div>
+    </app-card>
+  </div>
+
+  <!-- Top Técnicos -->
+  <div class="col-xl-4 col-md-6">
+    <app-card cardTitle="Top Técnicos" cardClass="table-card" blockClass="p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Técnico</th>
+              <th class="text-end">Tickets</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tecnico of stats.ticketsPorTecnico.slice(0, 8); let i = index">
+              <td>
+                <span class="badge bg-light-success me-2">{{ i + 1 }}</span>
+                {{ tecnico.tecnico }}
+              </td>
+              <td class="text-end">
+                <strong>{{ tecnico.cantidad }}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </app-card>
+  </div>
+
+  <!-- Últimos Tickets -->
+  <div class="col-xl-12">
+    <app-card cardTitle="Últimos Tickets Creados" cardClass="Recent-Users table-card" blockClass="p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>ID Ticket</th>
+              <th>Cliente</th>
+              <th>Tipo Servicio</th>
+              <th>Estado</th>
+              <th>Fecha Visita</th>
+              <th>Creado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ticket of stats.ultimosTickets">
+              <td>
+                <strong class="text-primary">{{ ticket.id }}</strong>
+              </td>
+              <td>{{ ticket.clienteNombre || '-' }}</td>
+              <td>
+                <span class="badge bg-light-info">{{ ticket.tipoServicio || '-' }}</span>
+              </td>
+              <td>
+                <i class="feather {{ getEstadoIcon(ticket.estado) }} {{ getEstadoColor(ticket.estado) }} m-r-5"></i>
+                {{ ticket.estado }}
+              </td>
+              <td>{{ formatFecha(ticket.fechaVisita) }}</td>
+              <td class="text-muted">{{ formatFecha(ticket.creadoEl) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </app-card>
+  </div>
+
+  <!-- Tickets por Empresa -->
+  <div class="col-xl-6 col-md-6">
+    <app-card cardTitle="Top Empresas" cardClass="table-card" blockClass="p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th class="text-end">Tickets</th>
+              <th class="text-end">%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let empresa of stats.ticketsPorEmpresa">
+              <td>{{ empresa.empresa }}</td>
+              <td class="text-end">
+                <strong>{{ empresa.cantidad }}</strong>
+              </td>
+              <td class="text-end">
+                {{ ((empresa.cantidad / stats.totalTickets) * 100).toFixed(1) }}%
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </app-card>
+  </div>
+
+  <!-- Indicadores Adicionales -->
+  <div class="col-xl-6 col-md-6">
+    <div class="card">
+      <div class="card-block border-bottom">
+        <div class="row d-flex align-items-center">
+          <div class="col-auto">
+            <i class="feather icon-alert-circle text-c-yellow f-30"></i>
+          </div>
+          <div class="col">
+            <h3 class="f-w-300">{{ stats.ticketsPendientes }}</h3>
+            <span class="d-block text-uppercase">Tickets Pendientes</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-block border-bottom">
+        <div class="row d-flex align-items-center">
+          <div class="col-auto">
+            <i class="feather icon-truck text-c-blue f-30"></i>
+          </div>
+          <div class="col">
+            <h3 class="f-w-300">{{ stats.ticketsEnProceso }}</h3>
+            <span class="d-block text-uppercase">Tickets En Proceso</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-block">
+        <div class="row d-flex align-items-center">
+          <div class="col-auto">
+            <i class="feather icon-activity text-c-green f-30"></i>
+          </div>
+          <div class="col">
+            <h3 class="f-w-300">{{ stats.ticketsDelDia }}</h3>
+            <span class="d-block text-uppercase">Tickets Hoy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
