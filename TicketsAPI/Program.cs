@@ -22,13 +22,6 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngular",
         corsBuilder =>
         {
-            var allowedOrigins = new[] {
-                "http://localhost:4200",                                                    // Desarrollo local
-                "https://visual-code-proyectos-h3kq0o0km-onunezs-projects.vercel.app",     // Producción Vercel
-                "https://siat-provincias.azurewebsites.net",                                 // Producción Azure (legacy)
-                "https://onunez2025.github.io"                                               // GitHub Pages
-            };
-
             if (builder.Environment.IsDevelopment())
             {
                 corsBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
@@ -36,7 +29,22 @@ builder.Services.AddCors(options =>
             else
             {
                 corsBuilder
-                    .WithOrigins(allowedOrigins)
+                    .SetIsOriginAllowed(origin =>
+                    {
+                        // Permitir localhost para desarrollo
+                        if (origin.StartsWith("http://localhost:")) return true;
+                        
+                        // Permitir todos los subdominios de Vercel
+                        if (origin.EndsWith(".vercel.app")) return true;
+                        
+                        // Permitir dominios específicos
+                        var allowedDomains = new[] {
+                            "https://siat-provincias.azurewebsites.net",
+                            "https://onunez2025.github.io"
+                        };
+                        
+                        return allowedDomains.Contains(origin);
+                    })
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();
