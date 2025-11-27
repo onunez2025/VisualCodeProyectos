@@ -157,8 +157,7 @@ export class TicketsComponent implements OnInit {
   }
 
   // Abrir modal de detalle
-  openDetail(ticket: Ticket, content: any): void {
-    console.log('Opening detail for ticket:', ticket.id);
+  openDetail(ticket: Ticket, content: unknown): void {
     this.selectedTicket = ticket;
     try {
       this.modalService.open(content, { 

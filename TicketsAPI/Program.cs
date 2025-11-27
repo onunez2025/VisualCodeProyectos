@@ -22,23 +22,31 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngular",
         corsBuilder =>
         {
-            corsBuilder
-                .WithOrigins(
-                    "http://localhost:4200",                                    // Desarrollo local
-                    "https://siat-provincias.azurewebsites.net",                // Producción Azure
-                    "https://onunez2025.github.io"                              // GitHub Pages
-                )
-                .SetIsOriginAllowedToAllowWildcardSubdomains()                  // Permite subdominios
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
+            var allowedOrigins = new[] {
+                "http://localhost:4200",                    // Desarrollo local
+                "https://siat-provincias.azurewebsites.net", // Producción Azure
+                "https://onunez2025.github.io"               // GitHub Pages
+            };
 
-            // En desarrollo, permitir cualquier origen
             if (builder.Environment.IsDevelopment())
             {
                 corsBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
             }
+            else
+            {
+                corsBuilder
+                    .WithOrigins(allowedOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            }
         });
+});
+
+// Agregar compresión para mejorar performance
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -55,17 +63,28 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-// Habilitar Swagger en todos los ambientes (útil para Railway)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tickets API V1");
-    c.RoutePrefix = string.Empty; // Swagger en la raíz (/)
-});
+// Habilitar compresión
+app.UseResponseCompression();
 
-// Railway maneja HTTPS en su proxy, no necesitamos redirección aquí
-// app.UseHttpsRedirection();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tickets API V1");
+        c.RoutePrefix = string.Empty; // Swagger en la raíz (/)
+    });
+}
+else
+{
+    // En producción, Swagger disponible pero no en la raíz
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tickets API V1");
+    });
+}
 
 // Habilitar CORS
 app.UseCors("AllowAngular");
@@ -73,5 +92,8 @@ app.UseCors("AllowAngular");
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Health check simple
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 app.Run();

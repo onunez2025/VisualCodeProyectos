@@ -3,6 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface TicketResumen {
+  id: string;
+  titulo: string;
+  estado: string;
+  fechaCreacion: string;
+  cliente?: string;
+}
+
 export interface DashboardStats {
   totalTickets: number;
   ticketsPendientes: number;
@@ -17,7 +25,7 @@ export interface DashboardStats {
   ticketsPorEmpresa: { empresa: string; cantidad: number }[];
   ticketsPorTecnico: { tecnico: string; cantidad: number }[];
   tendenciaSemanal: { dia: string; cantidad: number }[];
-  ultimosTickets: any[];
+  ultimosTickets: TicketResumen[];
 }
 
 @Injectable({

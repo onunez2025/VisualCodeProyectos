@@ -258,11 +258,9 @@ export class ClientesComponent implements OnInit {
   loadClienteProductos(): void {
     if (!this.selectedCliente) return;
     
-    console.log('Loading productos for cliente:', this.selectedCliente.id);
     this.loadingProductos = true;
     this.productoRegistradoService.getProductosByCliente(this.selectedCliente.id).subscribe({
       next: (productos) => {
-        console.log('Productos received:', productos);
         this.clienteProductos = productos;
         this.loadingProductos = false;
       },

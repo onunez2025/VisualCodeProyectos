@@ -13,6 +13,7 @@ bazel-out/
 # .NET
 bin/
 obj/
+publish/
 *.user
 *.suo
 *.cache
