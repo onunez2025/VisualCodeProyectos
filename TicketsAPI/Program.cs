@@ -23,9 +23,10 @@ builder.Services.AddCors(options =>
         corsBuilder =>
         {
             var allowedOrigins = new[] {
-                "http://localhost:4200",                    // Desarrollo local
-                "https://siat-provincias.azurewebsites.net", // Producción Azure
-                "https://onunez2025.github.io"               // GitHub Pages
+                "http://localhost:4200",                                                    // Desarrollo local
+                "https://visual-code-proyectos-h3kq0o0km-onunezs-projects.vercel.app",     // Producción Vercel
+                "https://siat-provincias.azurewebsites.net",                                 // Producción Azure (legacy)
+                "https://onunez2025.github.io"                                               // GitHub Pages
             };
 
             if (builder.Environment.IsDevelopment())
