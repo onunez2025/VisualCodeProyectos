@@ -4,9 +4,19 @@ using TicketsAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar DbContext con SQL Server
+// Configurar DbContext con PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    
+    // Soporte para Railway que usa DATABASE_URL
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    }
+    
+    options.UseNpgsql(connectionString);
+});
 
 // Registrar servicios
 builder.Services.AddScoped<ITicketService, TicketService>();

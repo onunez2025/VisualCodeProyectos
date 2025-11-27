@@ -27,28 +27,28 @@ namespace TicketsAPI.Data
             
             modelBuilder.Entity<Ticket>(entity =>
             {
-                entity.ToTable("GACP_APP_TB_TICKETS", "dbo");
+                entity.ToTable("GACP_APP_TB_TICKETS");
                 entity.HasKey(e => e.ID);
                 entity.Property(e => e.ID).HasColumnName("ID");
             });
 
             modelBuilder.Entity<Cliente>(entity =>
             {
-                entity.ToTable("GACP_APP_TB_CLIENTES", "dbo");
+                entity.ToTable("GACP_APP_TB_CLIENTES");
                 entity.HasKey(e => e.ID);
                 entity.Property(e => e.ID).HasColumnName("ID_cliente");
             });
 
             modelBuilder.Entity<Material>(entity =>
             {
-                entity.ToTable("GAC_APP_TB_MATERIALES", "dbo");
+                entity.ToTable("GAC_APP_TB_MATERIALES");
                 entity.HasKey(e => e.IdMaterial);
                 entity.Property(e => e.IdMaterial).HasColumnName("ID_Material");
             });
 
             modelBuilder.Entity<ProductoRegistrado>(entity =>
             {
-                entity.ToTable("GACP_APP_TB_PRODUCTO_REGISTRADO", "dbo");
+                entity.ToTable("GACP_APP_TB_PRODUCTO_REGISTRADO");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("ID");
             });
