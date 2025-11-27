@@ -9,6 +9,10 @@ export interface TicketResumen {
   estado: string;
   fechaCreacion: string;
   cliente?: string;
+  clienteNombre?: string;
+  tipoServicio?: string;
+  fechaVisita?: string;
+  creadoEl?: string;
 }
 
 export interface DashboardStats {
