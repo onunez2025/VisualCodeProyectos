@@ -4,18 +4,11 @@ using TicketsAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar DbContext con PostgreSQL
+// Configurar DbContext con Azure SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    
-    // Soporte para Railway que usa DATABASE_URL
-    if (string.IsNullOrEmpty(connectionString))
-    {
-        connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
-    }
-    
-    options.UseNpgsql(connectionString);
+    options.UseSqlServer(connectionString);
 });
 
 // Registrar servicios
